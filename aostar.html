@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AO* Algorithm Simulator</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+        .node {
+            fill: #ccc;
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+
+        .node.and {
+            fill: #f00;
+        }
+
+        .node.or {
+            fill: #00f;
+        }
+
+        .node.visited {
+            fill: #ff0;
+        }
+
+        .link {
+            stroke: #888;
+            stroke-width: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="simulator"></div>
+    <button id="stepButton" onclick="step()">Next Step</button>
+
+    <script>
+        // Define your graph, nodes, and edges
+        let nodes = [
+            {id: 'A', type: 'and', heuristic: 2, x: 250, y: 50},
+            {id: 'B', type: 'or', heuristic: 1, x: 125, y: 150},
+            {id: 'C', type: 'or', heuristic: 3, x: 375, y: 150},
+            {id: 'D', type: 'and', heuristic: 0, x: 62.5, y: 250},
+            {id: 'E', type: 'and', heuristic: 2, x: 187.5, y: 250},
+            {id: 'F', type: 'and', heuristic: 1, x: 312.5, y: 250},
+            {id: 'G', type: 'and', heuristic: 2, x: 437.5, y: 250}
+        ];
+
+        let links = [
+            {source: 'A', target: 'B', heuristic: 1},
+            {source: 'A', target: 'C', heuristic: 2},
+            {source: 'B', target: 'D', heuristic: 1},
+            {source: 'B', target: 'E', heuristic: 2},
+            {source: 'C', target: 'F', heuristic: 1},
+            {source: 'C', target: 'G', heuristic: 2}
+        ];
+
+        // Create a SVG for the graph
+        let svg = d3.select("#simulator").append("svg")
+            .attr("width", 500)
+            .attr("height", 600);
+
+        // Create the link lines
+        let link = svg.selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link")
+            .attr("x1", d => nodes.find(n => n.id === d.source).x)
+            .attr("y1", d => nodes.find(n => n.id === d.source).y)
+            .attr("x2", d => nodes.find(n => n.id === d.target).x)
+            .attr("y2", d => nodes.find(n => n.id === d.target).y);
+
+        // Create the nodes
+        let node = svg.selectAll("circle")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("class", d => "node " + d.type)
+            .attr("r", 20)
+            .attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+            .attr("id", d => d.id);
+
+        // Add labels to the nodes
+        let label = svg.selectAll("text")
+            .data(nodes)
+            .enter().append("text")
+            .text(d => d.id + "(" + d.heuristic + ")")
+            .attr("x", d => d.x)
+            .attr("y", d => d.y)
+            .attr("text-anchor", "middle")
+            .attr("dy", ".35em");
+
+        // Add labels to the links
+        let linkLabel = svg.selectAll(".link-label")
+            .data(links)
+            .enter().append("text")
+            .attr("class", "link-label")
+            .text(d => d.heuristic)
+            .attr("x", d => (nodes.find(n => n.id === d.source).x + nodes.find(n => n.id === d.target).x) / 2)
+            .attr("y", d => (nodes.find(n => n.id === d.source).y + nodes.find(n => n.id === d.target).y) / 2)
+            .attr("text-anchor", "middle")
+            .attr("dy", "-.35em");
+
+        // Run the AO* algorithm and update the graph
+        let openList = ['A'];
+        let currentIndex = 0;
+
+        window.step = function() {
+            if (currentIndex >= openList.length) {
+                alert("Algorithm finished!");
+                return;
+            }
+
+            let current = openList[currentIndex];
+            d3.select(`circle#${current}`).classed("visited", true);
+
+            if (current === 'J') {
+                alert("Goal node reached!");
+                return;
+            }
+
+            for (let child of links.filter(l => l.source === current).map(l => l.target)) {
+                openList.push(child);
+            }
+
+            currentIndex++;
+        }
+    </script>
+</body>
+</html>
